@@ -32,11 +32,11 @@ client requests can be easily forged
 
 **2) Server side:**
 
-**2-1) API server**
+    **2-1) API server**
 
 ![Untitled](./images/Untitled.png)
 
-**2-2) Middleware**
+    **2-2) Middleware**
 
 ![Untitled](./images/Untitled%201.png)
 
@@ -46,16 +46,22 @@ client requests can be easily forged
 
 ## Processing rate limiting algorithm
 
-1. **Token bucket**
+**1) Token bucket**
 Tokens are periodically filled in a container (bucket) with a specified capacity, and each request is processed using one token each time it is processed. If there is no token, the request is discarded.
-2. **Leaky bucket**
+
+**2) Leaky bucket**
 Implemented as a FIFO queue, it checks whether the queue is full and adds a request to the queue if there is an empty space. If the queue is full, new requests are discarded. Finally, requests are pulled from the queue at specified times and processed.
-3. **Fixed window counter**
+
+**3) Fixed window counter**
 Divide the timeline into windows at fixed intervals and add a counter to each window. Increments the count for each request based on the timestamp (minute, hour, etc.). If the count exceeds the threshold, the request is discarded.
-4. **Sliding window log**
+
+**4) Sliding window log**
+
 - New requests add a timestamp to the log. If the log size is equal to or smaller than the allowable value, the request is forwarded to the system, otherwise, processing is refused.
 - When a new request comes, the expired timestamp is removed, and an expired timestamp means that its value is older than the start time of the current window.
-1. **Sliding window counter**
+
+**5) Sliding window counter**
+
 - It is a combination of the fixed window counter algorithm and the sliding window logging algorithm.
 - Formula = Number of requests in the current 1 minute + Number of requests in the previous 1 minute x Rate of overlap between the moving window and the previous 1 minute
 - Processes a request as large as the value of the above formula in the current window.
@@ -65,10 +71,12 @@ Divide the timeline into windows at fixed intervals and add a counter to each wi
 - The rate limiter algorithm has a counter that can track how many requests have been received, and if the value of this counter exceeds a certain limit, requests that arrive beyond the limit are rejected.
 - It is desirable to store counters in a cache that runs in memory (supports fast, time-based expiration policy)
 - Example: Redis Rate Limiter
-1. Command
+
+**1) Command**
 - INCR: Increases the counter value by 1
 - EXPIRE: Set a timeout value for the counter, and the counter is automatically deleted when the set time elapses.
-2. Principle of operation
+
+**2) Principle of operation**
 - Client sends request to rate limiting middleware
 - The middleware retrieves a counter from a designated bucket in Redis and checks whether the limit has been reached.
 - If the limit is reached, the request is rejected
@@ -80,16 +88,13 @@ Divide the timeline into windows at fixed intervals and add a counter to each wi
 - Processing rate limit rules are stored on disk in the form of a configuration file.
 - Example: Restrict clients from logging in more than 5 times per minute
 
-> domain: auth
+ domain: auth
 descriptors:
-> 
-> 
->     - key: auth_type
->       Value: login
->       rate_limit:
->               unit: minute
->               requests_per_unit: 5
-> 
+       - key: auth_type
+         Value: login
+         rate_limit:
+                  unit: minute
+                  requests_per_unit: 5
 
 ## Processing of traffic exceeding rate limit
 
@@ -114,13 +119,15 @@ X-Ratelimit-Retry-After: tells you how many seconds to resend the request to avo
 
 Although easy to implement on a single server, scaling the system to support multiple servers and parallel threads requires addressing two issues
 
-1. **Race conditions**
+**1) Race conditions**
+
 - If threads processing two requests read the counter value in parallel, both will write the value of counter plus 1 to Redis, regardless of the processing status of other requests.
 - The solution to this is lock. However, since locks significantly reduce system performance, it can be better to use a Lua script or Redis' sorted set.
 
 ![Untitled](./images/Untitled%202.png)
 
-1. **Synchronization issue**
+**2) Synchronization issue**
+
 - If you have multiple Rate Limiter servers, synchronization becomes necessary.
 - Because the web layer is stateless, clients can send requests to different limiting devices.
 - Device 1 knows nothing about Client 2 and therefore cannot properly perform rate limiting.
