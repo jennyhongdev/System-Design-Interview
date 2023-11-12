@@ -32,11 +32,11 @@ client requests can be easily forged
 
 **2) Server side:**
 
-    **2-1) API server**
+**2-1) API server**
 
 ![Untitled](./images/Untitled.png)
 
-    **2-2) Middleware**
+**2-2) Middleware**
 
 ![Untitled](./images/Untitled%201.png)
 
@@ -141,11 +141,12 @@ However, since it is difficult to scale and inflexible, a better solution is a c
 
 ## Performance optimization
 
-1. **Support for multiple data centers**
+**1) Support for multiple data centers**
+
 - Users located far from the data center may experience increased processing latency.
 - Cloud service providers plant edge servers around the world and forward user traffic to the nearest edge server to reduce latency.
 
-1. **Eventual consistency model**
+**2) Eventual consistency model**
 When synchronizing data between devices, use an eventual consistency model (data consistency)
 
 ## Monitoring
