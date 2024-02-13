@@ -2,7 +2,7 @@
 **My takes from System Design Interview by Alex Xu**
 
 # 📆 Period
-**Schedule: October 22, 2023 ~ Ongoing**
+**October 22, 2023 ~ December 17, 2023 (2 months)**
 
 # 📚 Contents
 **1: Scale From Zero To Millions Of Users**
